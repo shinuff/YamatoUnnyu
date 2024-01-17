@@ -1,0 +1,9 @@
+﻿
+Private Sub Workbook_Open()
+    LoadInit
+'    If IsEmpty(ThisWorkbook.Names("DownloadedFolder").RefersToRange.Value) Then
+'        ThisWorkbook.Names("DownloadedFolder").RefersToRange.Value = CreateObject("Shell.Application").Namespace("shell:Downloads").Self.Path
+'    End If
+    OpenFacade
+        
+End Sub
