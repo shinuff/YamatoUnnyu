@@ -1,5 +1,6 @@
 Attribute VB_Name = "mdlTramsitOnYamatoUnnyu"
 Option Explicit
+Public Const c_DownloadedFile As String = "Downloaded_File"
 Public Enum FixDateEnum
     NearByBase = 0
     BeforeAYearByBase = 1
@@ -10,7 +11,14 @@ Sub OpenFacade()
     Dim sm As New SettingMemoryObject
     sm.Remember SettingFile
     '最後に動かせたファイル(今回のシークエンスではない可能性もある)のタイムスタンプとストッカフォルダの最新とタイムスタンプが一致なら
-    if
+    Dim oFS As New Scripting.FileSystemObject
+    Dim fs As Scripting.File
+    If oFS.FileExists(sm.Items("Downloaded_File").Value) Then
+        Set fs = oFS.GetFile(sm.Items("Downloaded_File").Value)
+        If sm.Items("Downloaded_DateTime").Value <= fs.DateLastModified Then
+            
+        End If
+    End If
 End Sub
 Public Sub TookOneLatestTarget(SrcFolder As String, DestFolder As String, FilterReg As String)
     'DownloadedFolderにある(一か月以内の更新かつ決まったフォーマットのファイル名かつ範囲内の年月日)対象があれば一つ所定のフォルダに(移動できれば)移動する

@@ -14,24 +14,26 @@ End Sub
 Function LoadInit() As Boolean
     'パターン１:設定ファイル優先、常に設定セルに設定値を用意
     '自身のパスをセル値Aとして保存。A=blankなら再設定。
-    Dim sSettingFile As String
+    Dim sSettingFile As String, oFS As New Scripting.FileSystemObject, bExistsSetting As Boolean
     '設定ファイルがない場合・必須項目(設定ファイル側)が存在しえない値の時、設定をし直す。
     '設定ファイルに設定値が正しく存在していても環境を移した時・必須項目セル値が設定ファイルのそれと値が違う時には設定ファイルから設定セル値に写す
-    Dim oFS As New Scripting.FileSystemObject, bExistsSetting As Boolean
-    sSettingFile = oFS.BuildPath(ThisWorkbook.Path, csSettingPath) '同マシンに同様の派生がある場合は配下のフォルダに設定ファイルを入れる
-    'sSettingFile = oFS.BuildPath(CreateObject("WshShell").Environments("AppData"), csSettingPath) '同マシンは共有の設定値を持たせたい場合はAppDataフォルダに設定ファイルを入れる
-    bExistsSetting = oFS.FileExists(sSettingFile)
-    Set m_sm = New SettingMemoryObject
-    
-    m_sm.Remember sSettingFile
-    'Excel側でコントロールする設定リセットトリガ(名前ThisWorkbook値を空白にして保存して再オープン)
+    bExistsSetting = oFS.FileExists(SettingFile)
+    If Not bExistsSetting Then
+        m_sm.Memorize SettingFile
+    End If
+    'VBEリセット後初回か再オープン後初回で設定ファイル読込
+    If Not CCast(m_sm).IsLoadCompleted Then
+        Set m_sm = New SettingMemoryObject
+        m_sm.Remember SettingFile
+    End If
+    'クライアント側でコントロールする設定リセットトリガ(名前ThisWorkbook値を空白にして保存して再オープン)
     If IsEmpty(ThisWorkbook.Names(csThisWorkbookKey).RefersToRange.Value) Then
         m_sm.Items(csThisWorkbookKey).Value = ""
     End If
     
     'Cが有効
     'Stop
-    If ThisWorkbook.Names(csDataKey).RefersToRange.Value <> m_sm(csDataKey).Value Then
+    If ThisWorkbook.Names(csDataKey).RefersToRange.Value <> m_sm(csDataKey).Value And Not IsEmpty(m_sm(csDataKey).Value) Then
         ThisWorkbook.Names(csDataKey).RefersToRange.Value = m_sm(csDataKey).Value
     End If
     Do While Not oFS.FileExists(m_sm.Items(csDataKey).Value)
@@ -57,15 +59,18 @@ Function LoadInit() As Boolean
     End If
     LoadInit = True
 ExitInitializing:
-    m_sm.Memorize SettingFile
+    Set m_sm = Nothing
 End Function
 
+Public Function CCast(obj As Object) As IClassRule
+    Set CCast = obj
+End Function
 Sub SetRequiredItem()
     'ダイアログにより設定する。ここで設定する値以外の何の設定値が必須かを知らない。
     '既存の設定セルと比較して異なったら設定セルに値設定
     '設定ファイル優先
     Dim sPaymentDataPath As String, vPath As Variant
-    vPath = Misc.GetOpenFilenameOnInitialDir("Microsoft Access Databaseファイル(*.mdb),*.mdb,すべてのファイル (*.*),*.*", 1, "配送台帳を指定してください。", "", False, ThisWorkbook.Path & "\dataStore", True)
+    vPath = Misc.GetOpenFilenameOnInitialDir("カンマ区切りファイル(*.csv),*.csv,すべてのファイル (*.*),*.*", 1, "対象月のヤマト運輸実績月別CSVを指定してください。", "", False, Replace(ThisWorkbook.FullName, ThisWorkbook.Name, csSettingPath), True)
     ThisWorkbook.Names(csDataKey).RefersToRange.Value = vPath
     m_sm(csDataKey).Value = vPath
 End Sub
@@ -133,3 +138,12 @@ Sub ImportBankCode()
     End With
     Range("C1:D1").Cut Destination:=Range("A1:B1")
 End Sub
+
+Public Property Get SettingFile() As String
+    SettingFile = CreateObject("Scripting.FileSystemObject").BuildPath(ThisWorkbook.Path, csSettingPath) '同マシンに同様の派生がある場合は配下のフォルダに設定ファイルを入れる
+    'SettingFile = Createobject("Scripting.FileSystemObject").BuildPath(CreateObject("WshShell").Environments("AppData"), csSettingPath) '同マシンは共有の設定値を持たせたい場合はAppDataフォルダに設定ファイルを入れる
+End Property
+
+Public Property Let SettingFile(ByVal vNewValue As String)
+
+End Property

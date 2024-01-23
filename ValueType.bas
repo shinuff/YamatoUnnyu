@@ -7,4 +7,5 @@ Public Enum SettingEnum
     ForString = 2
     ForNumber = 3
     Last = 3
+    ForDateTime = 4
 End Enum

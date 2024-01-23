@@ -61,7 +61,7 @@ Public Sub Concrete(ElementName As String, ElementValue As Variant, ElementPurpo
 End Sub
 Private Sub RegulizeValue()
     'm_Valueは初期化されていない可能性がある。この時点ではまだ読取プロパティをアクセサには使えない。
-    If (Purpose = SettingEnum.None) Or (Description = "Proxy") Or ((VarType(m_Value) = vbString) And (m_Value = "")) Then Exit Sub
+    If (Purpose = SettingEnum.None) Or (Description = "Proxy") Or ((VarType(m_Value) = vbString) And (m_Value = "")) Then m_Value = vbEmpty: Exit Sub
     Select Case Purpose
     Case SettingEnum.ForString
         'Stringの場合

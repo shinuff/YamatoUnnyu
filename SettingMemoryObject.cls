@@ -90,6 +90,8 @@ Private Function CSettingEnum(vSettingEnumString As Variant) As SettingEnum
     sSettingEnumString = LCase(CBStr(vSettingEnumString))
     If sSettingEnumString = "forpath" Then
         CSettingEnum = SettingEnum.ForPath
+    ElseIf sSettingEnumString = "fordatetime" Then
+        CSettingEnum = SettingEnum.ForDateTime
     ElseIf sSettingEnumString = "forstring" Then
         CSettingEnum = SettingEnum.ForString
     ElseIf sSettingEnumString = "" Or sSettingEnumString = "none" Then
