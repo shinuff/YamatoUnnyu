@@ -68,7 +68,7 @@ Public Property Get SettingFile() As String
     SettingFile = RegulizePath(m_sSettingFile)
 End Property
 Private Property Let SettingFile(ByVal SettingFilePath As String)
-    If Not CreateObject("Scripting.FileSystemObject").FileExists(SettingFilePath) Then Err.Raise vbObjectError + 3300, "SettingFile(w)", "設定ファイルが見つかりません。(" & SettingFilePath & ")"
+    'If Not CreateObject("Scripting.FileSystemObject").FileExists(SettingFilePath) Then Err.Raise vbObjectError + 3300, "SettingFile(w)", "設定ファイルが見つかりません。(" & SettingFilePath & ")"
     m_sSettingFile = SettingFilePath
 End Property
 Private Function CastBStr(StringValue As Variant, PurposeForCasting As SettingEnum) As Variant
@@ -77,6 +77,8 @@ Private Function CastBStr(StringValue As Variant, PurposeForCasting As SettingEn
     Select Case PurposeForCasting
     Case SettingEnum.ForPath
         CastBStr = sStringValue
+    Case SettingEnum.ForDateTime
+        CastBStr = CDate(StringValue)
     Case SettingEnum.ForString
         CastBStr = sStringValue
     Case SettingEnum.None

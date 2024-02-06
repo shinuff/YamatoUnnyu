@@ -11,7 +11,8 @@ Attribute VB_Name = "StringSet"
 
 Option Explicit
 '参照設定:
-'   Microsoft VBScript Regular Expressions 5.5
+'           : Microsoft Scripting Runtime
+'           : Microsoft VBScript Regular Expressions 5.5
 ' 文字列の集合を配列で扱うStaticClass
 ' 空集合はSplit("","")で表現する→Ubound(Split("", "")) = 0 は空の判定時うまくないためAPIで取得する→APIの場合環境依存でエラーになるケースあり
 '
@@ -545,6 +546,7 @@ Public Function CArrayStr(X As Variant) As String()
     CArrayStr = rc
 End Function
 
+'vbLfを改行コード対応
 Public Function GetArrayFromCSV(FileName As Variant, ExistsHeader As Boolean, ColumnIndexSet As Variant, Optional StartRow As Long = -1, Optional RowCount As Long = -1) As String()
     'Index は0基底, 配列か単変数の文字列か整数のみを許可。配列は単一の型のみ
     'フィールドダブりの場合のカラム指定はフィールド後方のダブり側に2基底の序数を末尾に加える
@@ -588,7 +590,7 @@ Public Function GetArrayFromCSV(FileName As Variant, ExistsHeader As Boolean, Co
     Else
         'Nop
     End If
-    Dim intFree As Integer
+    Dim oFS As New Scripting.FileSystemObject, oTS As TextStream
     Dim strRec As String
     Dim saHeader() As String, saCells() As String
     Dim i As Long, j As Long, k As Long
@@ -598,16 +600,15 @@ Public Function GetArrayFromCSV(FileName As Variant, ExistsHeader As Boolean, Co
         Exit Function
     End If
     'レコード数とヘッダの取得
-    intFree = FreeFile '空番号を取得
-    Open FileName For Input As #intFree 'CSVファィルをオープン
+    Set oTS = oFS.OpenTextFile(FileName) 'CSVファイルをオープン
     Dim lRowCount As Long
-    Do Until EOF(intFree)
+    Do Until oTS.AtEndOfLine
         lRowCount = lRowCount + 1
-        Line Input #intFree, strRec
+        strRec = oTS.ReadLine
         If lRowCount = 1 Then sHeader = strRec
         If strRec = "" Then lRowCount = lRowCount - 1
     Loop
-    Close #intFree
+    oTS.Close
     If ExistsHeader Then lRowCount = lRowCount - 1
     Dim lRowLimit As Long
     If RowCount = -1 Then
@@ -736,19 +737,19 @@ Public Function GetArrayFromCSV(FileName As Variant, ExistsHeader As Boolean, Co
             laColumnIndexSet(0) = ColumnIndexSet
         End If
     End If
-    Open FileName For Input As #intFree 'CSVファィルをオープン
+    Set oTS = oFS.OpenTextFile(FileName)  'CSVファィルをオープン
     ReDim saCells(lRowLimit - 1, UBound(laColumnIndexSet))
     Dim vLiner() As String
     ReDim vLiner(UBound(bDoubleField))
     i = 0
-    If ExistsHeader Then Line Input #intFree, strRec        'ヘッダ指定なら1行読み飛ばし
+    If ExistsHeader Then oTS.ReadLine        'ヘッダ指定なら1行読み飛ばし
     Do While i > StartRow
-        Input #intFree, strRec
+        strRec = oTS.ReadLine
         i = i + 1
     Loop
     i = 0
-    Do Until EOF(intFree) Or i >= lRowLimit
-        Line Input #intFree, strRec '1行読み込み
+    Do Until oTS.AtEndOfLine Or i >= lRowLimit
+        strRec = oTS.ReadLine
         j = 0
         lQuote = 0
         strCell = ""
@@ -796,7 +797,7 @@ Public Function GetArrayFromCSV(FileName As Variant, ExistsHeader As Boolean, Co
         Next
         i = i + 1
     Loop
-    Close #intFree
+    oTS.Close
     GetArrayFromCSV = saCells
 End Function
 
